@@ -7,6 +7,7 @@ public class LevelCtrl : MonoBehaviour
     private const int shapesNum = 10;
     private static Shape[] shapes;
     private static int currShapeNum;
+    private static int maxLvl;
 
     void Start()
     {
@@ -23,6 +24,7 @@ public class LevelCtrl : MonoBehaviour
             }
 
             currShapeNum = 0;
+            maxLvl = 0;
         }
         else
         {
@@ -34,9 +36,19 @@ public class LevelCtrl : MonoBehaviour
 
     public static int Click()
     {
-        shapes[currShapeNum].AddClick();
+        Shape currShape = shapes[currShapeNum];
 
-        int shapeTrueLvl = shapes[currShapeNum].lvl - shapes[currShapeNum].type;
+        if (currShape.lvl < maxLvl || currShape.type == maxLvl && currShape.lvl == maxLvl)
+        {
+            currShape.AddClick();
+
+            if (currShape.type == maxLvl && currShape.lvl > maxLvl)
+            {
+                maxLvl++;
+            }
+        }
+
+        int shapeTrueLvl = currShape.lvl - currShape.type;
         return shapeTrueLvl;
     }
 
