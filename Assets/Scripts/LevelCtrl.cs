@@ -9,7 +9,7 @@ public class LevelCtrl : MonoBehaviour
     private static int currShapeNum;
     private static int maxLvl;
 
-    void Start()
+    void Awake()
     {
         shapes = new Shape[shapesNum];
 
@@ -32,6 +32,11 @@ public class LevelCtrl : MonoBehaviour
 
             //temp: from local
         }
+    }
+
+    private void Start()
+    {
+        //
     }
 
     public static int Click()
