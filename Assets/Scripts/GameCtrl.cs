@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class GameCtrl : MonoBehaviour
 {
-    private const bool _debug = true; //TEMP
-    private const bool _cheats = true; //TEMP
-
     public bool interactable;
     public int currShapeTrueLvl;
 
@@ -83,13 +80,8 @@ public class GameCtrl : MonoBehaviour
     //  -------------cheats--------------
     public void SUPPER_CLICK()
     {
-        if (_cheats)
+        if (GameConstants._cheats)
         {
-            if (_debug)
-            {
-                Debug.Log("CHEAT ;>");
-            }
-
             Shape currShape = LevelCtrl.GetCurrShape();
             currShape.clicks = currShape.clicksForLvlUp - 1;
 

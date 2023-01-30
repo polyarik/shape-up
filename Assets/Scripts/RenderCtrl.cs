@@ -4,13 +4,11 @@ using UnityEngine.UI;
 
 public class RenderCtrl : MonoBehaviour
 {
-    private const bool _debug = true; //TEMP
-
     public GameObject shapeObject;
     private static SpriteRenderer shapeRenderer;
     private static int shapeSize;
 
-    //public Color shapeColor = Color.black;
+    private static Color[] shapeColors;
 
     public static TMPro.TextMeshProUGUI shapeProgressElem; //temp
     public static TMPro.TextMeshProUGUI infoElem; //temp
@@ -19,15 +17,11 @@ public class RenderCtrl : MonoBehaviour
 
     private static Shape currShape;
 
-    void Start()
+    void Awake()
     {
         shapeRenderer = shapeObject.GetComponent<SpriteRenderer>();
         shapeSize = (int)shapeObject.GetComponent<RectTransform>().rect.width;
 
-        if (_debug)
-        {
-            Debug.Log(shapeSize);
-        }
 
         Texture2D texture = new(shapeSize, shapeSize);
 
@@ -47,9 +41,28 @@ public class RenderCtrl : MonoBehaviour
         shapeProgressElem = transform.GetChild(1).GetComponent<TMPro.TextMeshProUGUI>(); //temp
         infoElem = transform.GetChild(2).GetComponent<TMPro.TextMeshProUGUI>(); //temp
 
-        //colors for every lvl, backgrounds and shapes
+        // init shape colors
+        shapeColors = new Color[GameConstants.shapesNum + 1]; //or shapesNum
+
+        for (int i = 0; i < GameConstants.shapesNum + 1; i++)
+        {
+            shapeColors[i] = new Color(
+                GameConstants.shapeColors[i][0],
+                GameConstants.shapeColors[i][1],
+                GameConstants.shapeColors[i][2],
+            1);
+        }
+
+
+        //colors for backgrounds ...
+
 
         changed = false;
+    }
+
+    void Start()
+    {
+        //
     }
 
     public static void UpdateShape(Shape shape)
@@ -80,8 +93,6 @@ public class RenderCtrl : MonoBehaviour
 
     private static void RenderShape()
     {
-        Color shapeColor = Color.black; //temp
-
         int numOfSides = currShape.type + 3;
 
         ushort[] triangles = new ushort[numOfSides * 3];
@@ -108,7 +119,7 @@ public class RenderCtrl : MonoBehaviour
 
         shapeRenderer.sprite.OverrideGeometry(uvs, triangles);
 
-        shapeRenderer.color = shapeColor;
+        shapeRenderer.color = shapeColors[currShape.lvl];
     }
 
     private static void ColorShape()
@@ -120,7 +131,7 @@ public class RenderCtrl : MonoBehaviour
     {
         float shapeLvlProgress = (float)currShape.clicks / (float)currShape.clicksForLvlUp;
 
-        if (_debug)
+        if (GameConstants._debug)
         {
             Debug.Log(
                 string.Format("type:{0}, lvl:{1}, clicks:{2}, lvlup:{3}",
@@ -136,6 +147,6 @@ public class RenderCtrl : MonoBehaviour
 
     private static void RenderClicks() //temp
     {
-        infoElem.text = string.Format("shape: {0}\nclicks: {1}", currShape.type, currShape.clicks);
+        infoElem.text = string.Format("shape: {0}   clicks: {1}", currShape.type, currShape.clicks);
     }
 }

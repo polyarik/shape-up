@@ -4,21 +4,20 @@ using UnityEngine;
 
 public class LevelCtrl : MonoBehaviour
 {
-    private const int shapesNum = 10;
     private static Shape[] shapes;
     private static int currShapeNum;
     private static int maxLvl;
 
     void Awake()
     {
-        shapes = new Shape[shapesNum];
+        shapes = new Shape[GameConstants.shapesNum];
 
         // check if this is the first time
         bool isNew = true;
 
         if (isNew)
         {
-            for (int i = 0; i < shapesNum; i++)
+            for (int i = 0; i < GameConstants.shapesNum; i++)
             {
                 shapes[i] = new Shape(i, i);
             }
@@ -59,7 +58,7 @@ public class LevelCtrl : MonoBehaviour
 
     public static int GotoNextShape()
     {
-        if (shapes[currShapeNum].lvl > currShapeNum && currShapeNum + 1 < shapesNum)
+        if (shapes[currShapeNum].lvl > currShapeNum && currShapeNum + 1 < GameConstants.shapesNum)
         {
             currShapeNum++;
             return currShapeNum;
