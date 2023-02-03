@@ -17,7 +17,7 @@ public struct GameConstants
         new float[] {.89f, 0, .27f}, // ruby
         new float[] {.44f, .4f, .67f}, // purple
         new float[] {1, .85f, 0}, // gold
-        //new float[] {1, 1, 1}, // white - secret?
+        new float[] {1, 1, 1}, // white - secret?
     };
 
     //pastel colors | neon colors | monochromatic ??

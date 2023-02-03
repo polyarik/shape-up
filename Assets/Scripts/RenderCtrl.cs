@@ -5,46 +5,44 @@ using UnityEngine.UI;
 public class RenderCtrl : MonoBehaviour
 {
     public GameObject shapeObject;
+    public GameObject progressBarObject;
+    public GameObject progressBarBgObject;
+
     private static SpriteRenderer shapeRenderer;
     private static int shapeSize;
 
+    private static Image progressBar;
+    private static Image progressBarBg;
+    private static Texture2D progressBarTexture;
+    private static Gradient progressBarGradient;
+
+    // currLvl
+    // nextLvl
+
+
     private static Color[] shapeColors;
 
-    public static TMPro.TextMeshProUGUI shapeProgressElem; //temp
-    public static TMPro.TextMeshProUGUI infoElem; //temp
+    private static Shape currShape;
 
     private static bool changed; //todo: track different changes
 
-    private static Shape currShape;
+    public static TMPro.TextMeshProUGUI shapeProgressElem; //temp
+    public static TMPro.TextMeshProUGUI infoElem; //temp
 
     void Awake()
     {
         shapeRenderer = shapeObject.GetComponent<SpriteRenderer>();
         shapeSize = (int)shapeObject.GetComponent<RectTransform>().rect.width;
 
-
-        Texture2D texture = new(shapeSize, shapeSize);
-
-        /*Color[] pixels = texture.GetPixels();
-
-        for (int i = 0, l = pixels.Length; i < l; i++)
-        {
-            pixels[i] = Color.black;
-        }
-
-        texture.SetPixels(pixels);
-        texture.Apply();*/
+        Texture2D shapeTexture = new(shapeSize, shapeSize); //todo: the whole canvas
 
         // shape sprite
-        shapeRenderer.sprite = Sprite.Create(texture, new Rect(-shapeSize/2, -shapeSize/2, shapeSize, shapeSize), new Vector2(.5f, .5f), 1);
-
-        shapeProgressElem = transform.GetChild(1).GetComponent<TMPro.TextMeshProUGUI>(); //temp
-        infoElem = transform.GetChild(2).GetComponent<TMPro.TextMeshProUGUI>(); //temp
+        shapeRenderer.sprite = Sprite.Create(shapeTexture, new Rect(-shapeSize/2, -shapeSize/2, shapeSize, shapeSize), new Vector2(.5f, .5f), 1);
 
         // init shape colors
-        shapeColors = new Color[GameConstants.shapesNum + 1]; //or shapesNum
+        shapeColors = new Color[GameConstants.shapesNum + 2]; //or shapesNum
 
-        for (int i = 0; i < GameConstants.shapesNum + 1; i++)
+        for (int i = 0; i < GameConstants.shapesNum + 2; i++) // or + 1 ?
         {
             shapeColors[i] = new Color(
                 GameConstants.shapeColors[i][0],
@@ -57,12 +55,31 @@ public class RenderCtrl : MonoBehaviour
         //colors for backgrounds ...
 
 
+
+        InitProgressBar();
+
+
         changed = false;
+
+
+        shapeProgressElem = transform.Find("progress_TEMP").GetComponent<TMPro.TextMeshProUGUI>(); //temp
+        infoElem = transform.Find("info_TEMP").GetComponent<TMPro.TextMeshProUGUI>(); //temp
     }
 
-    void Start()
+    private void InitProgressBar()
     {
-        //
+        progressBar = progressBarObject.GetComponent<Image>();
+        progressBar.type = Image.Type.Filled;
+        progressBar.fillMethod = Image.FillMethod.Horizontal;
+        progressBar.fillOrigin = (int)Image.OriginHorizontal.Left;
+
+        progressBarBg = progressBarBgObject.GetComponent<Image>();
+
+        int width = (int)progressBar.GetComponent<RectTransform>().rect.width;
+        int height = (int)progressBar.GetComponent<RectTransform>().rect.height;
+        progressBarTexture = new Texture2D(width, height);
+
+        progressBarGradient = new Gradient();
     }
 
     public static void UpdateShape(Shape shape)
@@ -74,13 +91,46 @@ public class RenderCtrl : MonoBehaviour
         changed = true;
     }
 
+    public static void CreateProgressBar(int currLvl=0)
+    {
+        progressBarGradient.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(shapeColors[currLvl], 0), new GradientColorKey(shapeColors[currLvl + 1], 1) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) }
+        );
+
+        int width = progressBarTexture.width;
+        int height = progressBarTexture.height;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                progressBarTexture.SetPixel(x, y, progressBarGradient.Evaluate((float)x / width));
+            }
+        }
+        progressBarTexture.Apply();
+
+        progressBar.sprite = Sprite.Create(progressBarTexture, new Rect(0, 0, width, height), Vector2.zero);
+
+        // progress bar background
+        Color bgColor = shapeColors[currLvl];
+        bgColor.a = 0.2f;
+        progressBarBg.color = bgColor;
+
+        //todo: prepare bar shapes
+    }
+
     void Update()
     {
+        //TRACK DIFFERENT CHANGES!
+
         if (changed)
         {
             changed = false;
 
             RenderShape();
+
+            CreateProgressBar(currShape.lvl); //todo: only on switch or lvl up
             RenderProgressBar();
 
             RenderClicks(); //temp
@@ -88,8 +138,6 @@ public class RenderCtrl : MonoBehaviour
     }
 
     //void RenderBackground()
-
-    //void CreateProgressBar //on switch or lvlup
 
     private static void RenderShape()
     {
@@ -130,6 +178,7 @@ public class RenderCtrl : MonoBehaviour
     private static void RenderProgressBar()
     {
         float shapeLvlProgress = (float)currShape.clicks / (float)currShape.clicksForLvlUp;
+        progressBar.fillAmount = shapeLvlProgress;
 
         if (GameConstants._debug)
         {
@@ -138,6 +187,8 @@ public class RenderCtrl : MonoBehaviour
                     currShape.type, currShape.lvl, currShape.clicks, currShape.clicksForLvlUp)
             );
         }
+
+
 
         //temp
         int progressPercentage = (int)(shapeLvlProgress * 100);
