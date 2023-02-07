@@ -25,10 +25,10 @@ public class RenderCtrl : MonoBehaviour
 
     private static Shape currShape;
 
-    private static bool changed; //todo: track different changes
+    private static bool shapeChange;
+    private static bool progressChange;
 
     public static TMPro.TextMeshProUGUI shapeProgressElem; //temp
-    public static TMPro.TextMeshProUGUI infoElem; //temp
 
     void Awake()
     {
@@ -59,11 +59,12 @@ public class RenderCtrl : MonoBehaviour
 
         InitProgressBar();
 
-        changed = false;
+        currShape = new Shape(-1, -1);
+        shapeChange = false;
+        progressChange = false;
 
 
         shapeProgressElem = transform.Find("progress_TEMP").GetComponent<TMPro.TextMeshProUGUI>(); //temp
-        infoElem = transform.Find("info_TEMP").GetComponent<TMPro.TextMeshProUGUI>(); //temp
     }
 
     private void InitProgressBar()
@@ -82,33 +83,37 @@ public class RenderCtrl : MonoBehaviour
 
     public static void UpdateShape(Shape shape)
     {
-        currShape = shape;
+        if (currShape.type != shape.type || currShape.lvl != shape.lvl)
+            shapeChange = true;
 
-        // update buttons?
+        currShape.type = shape.type;
+        currShape.lvl = shape.lvl;
+        currShape.clicks = shape.clicks;
+        currShape.clicksForLvlUp = shape.clicksForLvlUp;
 
-        changed = true;
+        progressChange = true;
     }
 
     void Update()
     {
-        //TRACK DIFFERENT CHANGES!
-
-        if (changed)
+        if (progressChange)
         {
-            changed = false;
+            progressChange = false;
 
+            // shape switch or lvl up
+            if (shapeChange)
+            {
+                shapeChange = false;
 
-            //todo: only on switch or lvl up
-            ChangeProgressGradient(currShape.lvl);
-            RenderShape();
-            CreateProgressBar();
+                ChangeProgressGradient(currShape.lvl);
+                RenderShape();
+                CreateProgressBar();
 
+                //todo: update next&prev buttons
+            }
 
-            //------------
             ColorShape();
             RenderProgressBar();
-
-            RenderClicks(); //temp
         }
     }
 
@@ -188,10 +193,5 @@ public class RenderCtrl : MonoBehaviour
         //temp
         int progressPercentage = (int)(shapeLvlProgress * 100);
         shapeProgressElem.text = string.Format("{0} => {1}% => {2}", currShape.lvl, progressPercentage, currShape.lvl + 1);
-    }
-
-    private static void RenderClicks() //temp
-    {
-        infoElem.text = string.Format("shape: {0}   clicks: {1}", currShape.type, currShape.clicks);
     }
 }
