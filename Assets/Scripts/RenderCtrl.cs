@@ -8,13 +8,14 @@ public class RenderCtrl : MonoBehaviour
     public GameObject progressBarObject;
     public GameObject progressBarBgObject;
 
+    private static Gradient progressGradient;
+
     private static SpriteRenderer shapeRenderer;
     private static int shapeSize;
 
     private static Image progressBar;
     private static Image progressBarBg;
     private static Texture2D progressBarTexture;
-    private static Gradient progressBarGradient;
 
     // currLvl
     // nextLvl
@@ -51,13 +52,12 @@ public class RenderCtrl : MonoBehaviour
             1);
         }
 
-
         //colors for backgrounds ...
+        //
 
-
+        progressGradient = new Gradient();
 
         InitProgressBar();
-
 
         changed = false;
 
@@ -78,8 +78,6 @@ public class RenderCtrl : MonoBehaviour
         int width = (int)progressBar.GetComponent<RectTransform>().rect.width;
         int height = (int)progressBar.GetComponent<RectTransform>().rect.height;
         progressBarTexture = new Texture2D(width, height);
-
-        progressBarGradient = new Gradient();
     }
 
     public static void UpdateShape(Shape shape)
@@ -91,35 +89,6 @@ public class RenderCtrl : MonoBehaviour
         changed = true;
     }
 
-    public static void CreateProgressBar(int currLvl=0)
-    {
-        progressBarGradient.SetKeys(
-            new GradientColorKey[] { new GradientColorKey(shapeColors[currLvl], 0), new GradientColorKey(shapeColors[currLvl + 1], 1) },
-            new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) }
-        );
-
-        int width = progressBarTexture.width;
-        int height = progressBarTexture.height;
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                progressBarTexture.SetPixel(x, y, progressBarGradient.Evaluate((float)x / width));
-            }
-        }
-        progressBarTexture.Apply();
-
-        progressBar.sprite = Sprite.Create(progressBarTexture, new Rect(0, 0, width, height), Vector2.zero);
-
-        // progress bar background
-        Color bgColor = shapeColors[currLvl];
-        bgColor.a = 0.2f;
-        progressBarBg.color = bgColor;
-
-        //todo: prepare bar shapes
-    }
-
     void Update()
     {
         //TRACK DIFFERENT CHANGES!
@@ -128,9 +97,15 @@ public class RenderCtrl : MonoBehaviour
         {
             changed = false;
 
-            RenderShape();
 
-            CreateProgressBar(currShape.lvl); //todo: only on switch or lvl up
+            //todo: only on switch or lvl up
+            ChangeProgressGradient(currShape.lvl);
+            RenderShape();
+            CreateProgressBar();
+
+
+            //------------
+            ColorShape();
             RenderProgressBar();
 
             RenderClicks(); //temp
@@ -138,6 +113,14 @@ public class RenderCtrl : MonoBehaviour
     }
 
     //void RenderBackground()
+
+    private static void ChangeProgressGradient(int currLvl = 0)
+    {
+        progressGradient.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(shapeColors[currLvl], 0), new GradientColorKey(shapeColors[currLvl + 1], 1) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) }
+        );
+    }
 
     private static void RenderShape()
     {
@@ -166,13 +149,35 @@ public class RenderCtrl : MonoBehaviour
         }
 
         shapeRenderer.sprite.OverrideGeometry(uvs, triangles);
-
-        shapeRenderer.color = shapeColors[currShape.lvl];
     }
 
     private static void ColorShape()
     {
-        //
+        shapeRenderer.color = progressGradient.Evaluate((float)currShape.clicks / (float)currShape.clicksForLvlUp);
+    }
+
+    private static void CreateProgressBar()
+    {
+        int width = progressBarTexture.width;
+        int height = progressBarTexture.height;
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                progressBarTexture.SetPixel(x, y, progressGradient.Evaluate((float)x / width));
+            }
+        }
+        progressBarTexture.Apply();
+
+        progressBar.sprite = Sprite.Create(progressBarTexture, new Rect(0, 0, width, height), Vector2.zero);
+
+        // progress bar background
+        Color bgColor = progressGradient.Evaluate(0);
+        bgColor.a = 0.2f;
+        progressBarBg.color = bgColor;
+
+        //todo: prepare bar shapes
     }
 
     private static void RenderProgressBar()
@@ -180,19 +185,8 @@ public class RenderCtrl : MonoBehaviour
         float shapeLvlProgress = (float)currShape.clicks / (float)currShape.clicksForLvlUp;
         progressBar.fillAmount = shapeLvlProgress;
 
-        if (GameConstants._debug)
-        {
-            Debug.Log(
-                string.Format("type:{0}, lvl:{1}, clicks:{2}, lvlup:{3}",
-                    currShape.type, currShape.lvl, currShape.clicks, currShape.clicksForLvlUp)
-            );
-        }
-
-
-
         //temp
         int progressPercentage = (int)(shapeLvlProgress * 100);
-
         shapeProgressElem.text = string.Format("{0} => {1}% => {2}", currShape.lvl, progressPercentage, currShape.lvl + 1);
     }
 
