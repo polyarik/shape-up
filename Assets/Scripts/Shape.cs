@@ -10,7 +10,7 @@ public class Shape
     public int clicksForLvlUp;
     public bool upgradable;
 
-    public Shape(int shapeType, int shapeLvl, int shapeClicks = 0, bool isUpgradable=true)
+    public Shape(int shapeType, int shapeLvl, int shapeClicks=0, bool isUpgradable=false)
     {
         type = shapeType;
         lvl = shapeLvl;
@@ -22,14 +22,17 @@ public class Shape
 
     public void AddClick()
     {
-        clicks++;
-
-        if (clicks >= clicksForLvlUp)
+        if (upgradable)
         {
-            // lvl up
-            clicks -= clicksForLvlUp;
-            lvl++;
-            clicksForLvlUp = CalcClicksForLvlUp();
+            clicks++;
+
+            if (clicks >= clicksForLvlUp)
+            {
+                // lvl up
+                clicks -= clicksForLvlUp;
+                lvl++;
+                clicksForLvlUp = CalcClicksForLvlUp();
+            }
         }
     }
 

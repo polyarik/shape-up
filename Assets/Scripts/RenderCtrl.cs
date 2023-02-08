@@ -9,6 +9,8 @@ public class RenderCtrl : MonoBehaviour
     public GameObject progressBarBgObject;
     public GameObject barCurrLvlObject;
     public GameObject barNextLvlObject;
+    public GameObject prevShapeButton;
+    public GameObject nextShapeButton;
 
     private static SpriteRenderer shapeRenderer;
     private static int shapeSize;
@@ -29,6 +31,9 @@ public class RenderCtrl : MonoBehaviour
 
     private static bool shapeChange;
     private static bool progressChange;
+
+    private static Image prevShapeButtonRenderer; //temp -> SpriteRenderer
+    private static Image nextShapeButtonRenderer; //temp
 
     void Awake()
     {
@@ -64,6 +69,10 @@ public class RenderCtrl : MonoBehaviour
         currShape = new Shape(-1, -1);
         shapeChange = false;
         progressChange = false;
+
+
+        prevShapeButtonRenderer = prevShapeButton.GetComponent<Image>(); //temp
+        nextShapeButtonRenderer = nextShapeButton.GetComponent<Image>(); //temp
     }
 
     private void InitProgressBar()
@@ -125,10 +134,11 @@ public class RenderCtrl : MonoBehaviour
                 shapeChange = false;
 
                 ChangeProgressGradient(currShape.lvl);
+
                 RenderShape();
                 CreateProgressBar();
 
-                //todo: update next&prev buttons
+                UpdateSwitchButtons();
             }
 
             ColorShape();
@@ -242,5 +252,11 @@ public class RenderCtrl : MonoBehaviour
         }
 
         return triangles;
+    }
+
+    private static void UpdateSwitchButtons()
+    {
+        prevShapeButtonRenderer.color = (currShape.type > 0) ? Color.white : new Color(0, 0, 0, .2f);
+        nextShapeButtonRenderer.color = (currShape.lvl > currShape.type) ? Color.white : new Color(0, 0, 0, .2f);
     }
 }

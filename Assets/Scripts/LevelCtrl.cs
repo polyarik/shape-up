@@ -22,6 +22,7 @@ public class LevelCtrl : MonoBehaviour
                 shapes[i] = new Shape(i, i);
             }
 
+            shapes[0].upgradable = true;
             currShapeNum = 0;
             maxLvl = 0;
         }
@@ -54,6 +55,7 @@ public class LevelCtrl : MonoBehaviour
             if (currShape.type == maxLvl && currShape.lvl > maxLvl)
             {
                 maxLvl++;
+                shapes[currShapeNum + 1].upgradable = true;
 
                 for (int i = 0; i < currShape.type; i++)
                 {
