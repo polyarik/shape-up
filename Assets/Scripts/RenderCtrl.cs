@@ -7,20 +7,22 @@ public class RenderCtrl : MonoBehaviour
     public GameObject shapeObject;
     public GameObject progressBarObject;
     public GameObject progressBarBgObject;
-
-    private static Gradient progressGradient;
+    public GameObject barCurrLvlObject;
+    public GameObject barNextLvlObject;
 
     private static SpriteRenderer shapeRenderer;
     private static int shapeSize;
 
     private static Image progressBar;
     private static Image progressBarBg;
+    private static SpriteRenderer barCurrLvlRenderer;
+    private static SpriteRenderer barNextLvlRenderer;
+    private static int progressBarShapeSize;
+
+    private static Texture2D shapeTexture;
     private static Texture2D progressBarTexture;
 
-    // currLvl
-    // nextLvl
-
-
+    private static Gradient progressGradient;
     private static Color[] shapeColors;
 
     private static Shape currShape;
@@ -28,17 +30,19 @@ public class RenderCtrl : MonoBehaviour
     private static bool shapeChange;
     private static bool progressChange;
 
-    public static TMPro.TextMeshProUGUI shapeProgressElem; //temp
-
     void Awake()
     {
+        int screenWidth = (int)gameObject.GetComponent<RectTransform>().rect.width;
+        int screenHeight = (int)gameObject.GetComponent<RectTransform>().rect.height;
+        shapeTexture = new(screenWidth, screenHeight);
+
         shapeRenderer = shapeObject.GetComponent<SpriteRenderer>();
         shapeSize = (int)shapeObject.GetComponent<RectTransform>().rect.width;
 
-        Texture2D shapeTexture = new(shapeSize, shapeSize); //todo: the whole canvas
-
         // shape sprite
         shapeRenderer.sprite = Sprite.Create(shapeTexture, new Rect(-shapeSize/2, -shapeSize/2, shapeSize, shapeSize), new Vector2(.5f, .5f), 1);
+
+        InitProgressBar();
 
         // init shape colors
         shapeColors = new Color[GameConstants.shapesNum + 2]; //or shapesNum
@@ -57,14 +61,9 @@ public class RenderCtrl : MonoBehaviour
 
         progressGradient = new Gradient();
 
-        InitProgressBar();
-
         currShape = new Shape(-1, -1);
         shapeChange = false;
         progressChange = false;
-
-
-        shapeProgressElem = transform.Find("progress_TEMP").GetComponent<TMPro.TextMeshProUGUI>(); //temp
     }
 
     private void InitProgressBar()
@@ -79,6 +78,25 @@ public class RenderCtrl : MonoBehaviour
         int width = (int)progressBar.GetComponent<RectTransform>().rect.width;
         int height = (int)progressBar.GetComponent<RectTransform>().rect.height;
         progressBarTexture = new Texture2D(width, height);
+
+        // progress bar shapes
+        barCurrLvlRenderer = barCurrLvlObject.GetComponent<SpriteRenderer>();
+        barNextLvlRenderer = barNextLvlObject.GetComponent<SpriteRenderer>();
+        progressBarShapeSize = (int)barCurrLvlObject.GetComponent<RectTransform>().rect.width;
+
+        // progress bar current lvl shape sprite
+        barCurrLvlRenderer.sprite = Sprite.Create(
+            shapeTexture,
+            new Rect(-progressBarShapeSize / 2, -progressBarShapeSize / 2, progressBarShapeSize, progressBarShapeSize),
+            new Vector2(0, .5f), 1
+        );
+
+        // progress bar next lvl shape sprite
+        barNextLvlRenderer.sprite = Sprite.Create(
+            shapeTexture,
+            new Rect(-progressBarShapeSize / 2, -progressBarShapeSize / 2, progressBarShapeSize, progressBarShapeSize),
+            new Vector2(1, .5f), 1
+        );
     }
 
     public static void UpdateShape(Shape shape)
@@ -90,6 +108,7 @@ public class RenderCtrl : MonoBehaviour
         currShape.lvl = shape.lvl;
         currShape.clicks = shape.clicks;
         currShape.clicksForLvlUp = shape.clicksForLvlUp;
+        currShape.upgradable = shape.upgradable;
 
         progressChange = true;
     }
@@ -131,29 +150,10 @@ public class RenderCtrl : MonoBehaviour
     {
         int numOfSides = currShape.type + 3;
 
-        ushort[] triangles = new ushort[numOfSides * 3];
-        Vector2[] uvs = new Vector2[numOfSides];
+        Vector2[] vertices = GenerateVertices(numOfSides, shapeSize);
+        ushort[] triangles = GenerateTriangles(numOfSides);
 
-        float angle = 0f;
-        float angleIncrement = 360f / numOfSides;
-
-        for (int i = 0; i < numOfSides; i++)
-        {
-            float x = (Mathf.Sin(angle * Mathf.Deg2Rad) * shapeSize / 2) + shapeSize / 2;
-            float y = (Mathf.Cos(angle * Mathf.Deg2Rad) * shapeSize / 2) + shapeSize / 2;
-
-            uvs[i] = new Vector2(x, y);
-            angle += angleIncrement;
-        }
-
-        for (int i = 0; i < numOfSides - 2; i++)
-        {
-            triangles[i * 3] = 0;
-            triangles[i * 3 + 1] = (ushort)(i + 1);
-            triangles[i * 3 + 2] = (ushort)(i + 2);
-        }
-
-        shapeRenderer.sprite.OverrideGeometry(uvs, triangles);
+        shapeRenderer.sprite.OverrideGeometry(vertices, triangles);
     }
 
     private static void ColorShape()
@@ -177,21 +177,70 @@ public class RenderCtrl : MonoBehaviour
 
         progressBar.sprite = Sprite.Create(progressBarTexture, new Rect(0, 0, width, height), Vector2.zero);
 
-        // progress bar background
-        Color bgColor = progressGradient.Evaluate(0);
-        bgColor.a = 0.2f;
-        progressBarBg.color = bgColor;
+        //progress bar shapes
+        int numOfSides = currShape.type + 3;
 
-        //todo: prepare bar shapes
+        Vector2[] vertices = GenerateVertices(numOfSides, progressBarShapeSize);
+        ushort[] triangles = GenerateTriangles(numOfSides);
+
+        barCurrLvlRenderer.sprite.OverrideGeometry(vertices, triangles);
+        barNextLvlRenderer.sprite.OverrideGeometry(vertices, triangles);
+
+        if (currShape.upgradable)
+        {
+            Color bgColor = progressGradient.Evaluate(0);
+            bgColor.a = 0.2f;
+            progressBarBg.color = bgColor;
+
+            barCurrLvlRenderer.color = progressGradient.Evaluate(0);
+            barNextLvlRenderer.color = progressGradient.Evaluate(1);
+        }
+        else
+        {
+            progressBarBg.color = Color.clear;
+
+            barCurrLvlRenderer.color = Color.clear;
+            barNextLvlRenderer.color = Color.clear;
+        }
     }
 
     private static void RenderProgressBar()
     {
         float shapeLvlProgress = (float)currShape.clicks / (float)currShape.clicksForLvlUp;
         progressBar.fillAmount = shapeLvlProgress;
+    }
 
-        //temp
-        int progressPercentage = (int)(shapeLvlProgress * 100);
-        shapeProgressElem.text = string.Format("{0} => {1}% => {2}", currShape.lvl, progressPercentage, currShape.lvl + 1);
+    private static Vector2[] GenerateVertices(int numOfSides, int size)
+    {
+        Vector2[] vertices = new Vector2[numOfSides];
+        int halfSize = (int)(size / 2);
+
+        float angle = 0f;
+        float angleIncrement = 360f / numOfSides;
+
+        for (int i = 0; i < numOfSides; i++)
+        {
+            float x = (Mathf.Sin(angle * Mathf.Deg2Rad) * halfSize) + halfSize;
+            float y = (Mathf.Cos(angle * Mathf.Deg2Rad) * halfSize) + halfSize;
+
+            vertices[i] = new Vector2(x, y);
+            angle += angleIncrement;
+        }
+
+        return vertices;
+    }
+
+    private static ushort[] GenerateTriangles(int numOfSides)
+    {
+        ushort[] triangles = new ushort[numOfSides * 3];
+
+        for (int i = 0; i < numOfSides - 2; i++)
+        {
+            triangles[i * 3] = 0;
+            triangles[i * 3 + 1] = (ushort)(i + 1);
+            triangles[i * 3 + 2] = (ushort)(i + 2);
+        }
+
+        return triangles;
     }
 }

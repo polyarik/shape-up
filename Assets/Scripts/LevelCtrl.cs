@@ -42,13 +42,26 @@ public class LevelCtrl : MonoBehaviour
     {
         Shape currShape = shapes[currShapeNum];
 
-        if (currShape.lvl < maxLvl || currShape.type == maxLvl && currShape.lvl == maxLvl)
+        if (currShape.upgradable)
         {
             currShape.AddClick();
+
+            if (currShape.type < maxLvl && currShape.lvl == maxLvl || currShape.type == maxLvl && currShape.lvl > maxLvl)
+            {
+                currShape.upgradable = false;
+            }
 
             if (currShape.type == maxLvl && currShape.lvl > maxLvl)
             {
                 maxLvl++;
+
+                for (int i = 0; i < currShape.type; i++)
+                {
+                    if (shapes[i].lvl < maxLvl)
+                    {
+                        shapes[i].upgradable = true;
+                    }
+                }
             }
         }
 

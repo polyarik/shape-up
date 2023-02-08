@@ -8,12 +8,14 @@ public class Shape
     public int lvl;
     public int clicks;
     public int clicksForLvlUp;
+    public bool upgradable;
 
-    public Shape(int shapeType, int shapeLvl, int shapeClicks = 0)
+    public Shape(int shapeType, int shapeLvl, int shapeClicks = 0, bool isUpgradable=true)
     {
         type = shapeType;
         lvl = shapeLvl;
         clicks = shapeClicks;
+        upgradable = isUpgradable;
 
         clicksForLvlUp = CalcClicksForLvlUp();
     }
