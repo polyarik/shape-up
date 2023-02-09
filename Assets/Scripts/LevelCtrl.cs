@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelCtrl : MonoBehaviour
+public class LevelCtrl : MonoBehaviour, IDataPersistence
 {
     private static Shape[] shapes;
     private static int currShapeNum;
@@ -11,32 +11,45 @@ public class LevelCtrl : MonoBehaviour
     void Awake()
     {
         shapes = new Shape[GameConstants.shapesNum];
-
-        // check if this is the first time
-        bool isNew = true;
-
-        if (isNew)
-        {
-            for (int i = 0; i < GameConstants.shapesNum; i++)
-            {
-                shapes[i] = new Shape(i, i);
-            }
-
-            shapes[0].upgradable = true;
-            currShapeNum = 0;
-            maxLvl = 0;
-        }
-        else
-        {
-            //load all the progress from google
-
-            //temp: from local
-        }
     }
 
-    private void Start()
+    public void LoadData(PlayerData data)
     {
-        //
+        maxLvl = 0;
+
+        for (int i = 0; i < data.lvls.Length; i++)
+        {
+            shapes[i] = new Shape(i, data.lvls[i], data.clicks[i]);
+
+            if (data.lvls[i] > i)
+            {
+                maxLvl++;
+            }
+        }
+
+        foreach (Shape shape in shapes)
+        {
+            shape.upgradable = shape.lvl < maxLvl;
+        }
+
+        shapes[maxLvl].upgradable = true; // the last unlocked shape
+        currShapeNum = data.currShapeNum;
+    }
+
+    public void SaveData(ref PlayerData data)
+    {
+        int[] lvls = new int[shapes.Length];
+        int[] clicks = new int[shapes.Length];
+
+        for (int i = 0; i < data.lvls.Length; i++)
+        {
+            lvls[i] = shapes[i].lvl;
+            clicks[i] = shapes[i].clicks;
+        }
+
+        data.lvls = lvls;
+        data.clicks = clicks;
+        data.currShapeNum = currShapeNum;
     }
 
     public static int Click()

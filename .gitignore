@@ -5,5 +5,5 @@
 !Assets/
 Assets/*
 !Assets/Scripts/
-Assets/Scripts/*
-!Assets/Scripts/*.cs
+
+*.meta

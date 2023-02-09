@@ -256,7 +256,7 @@ public class RenderCtrl : MonoBehaviour
 
     private static void UpdateSwitchButtons()
     {
-        prevShapeButtonRenderer.color = (currShape.type > 0) ? Color.white : new Color(0, 0, 0, .2f);
-        nextShapeButtonRenderer.color = (currShape.lvl > currShape.type) ? Color.white : new Color(0, 0, 0, .2f);
+        prevShapeButtonRenderer.color = (currShape.type > 0) ? Color.white : new Color(0, 0, 0, .2f); //temp
+        nextShapeButtonRenderer.color = (currShape.lvl > currShape.type) ? Color.white : new Color(0, 0, 0, .2f); //temp
     }
 }

@@ -4,6 +4,7 @@ public struct GameConstants
     public const bool _debug = true;
 
     public const int shapesNum = 10;
+    public static float saveRepeatRate = 15f;
 
     public static float[][] shapeColors = new float[][] {
         new float[] {0, 0, 0}, // black
